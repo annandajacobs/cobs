@@ -1,3 +1,32 @@
-from django.shortcuts import render
+from rest_framework import generics
+from rest_framework.permissions import IsAuthenticated
 
-# Create your views here.
+from .models import Transaction
+from .serializers import TransactionSerializer
+
+
+class TransactionListCreateView(generics.ListCreateAPIView):
+    serializer_class = TransactionSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return(
+            Transaction.objects
+            .filter(user=self.request.user)
+            .select_related("account", "destination_account", "category")
+        )
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+
+class TransactionDetailView(generics.RetrieveUpdateAPIView):
+    serializer_class = TransactionSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return(
+            Transaction.objects
+            .filter(user=self.request.user)
+            .select_related("account", "destination_account", "category")
+        )
